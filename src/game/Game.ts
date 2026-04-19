@@ -85,11 +85,26 @@ export class Game {
     this.remotePlayers = new RemotePlayerManager(this.scene);
 
     this.ui = new UIManager(this.state, {
-      onStart: () => void this.startOfflineGame(),
-      onJoinPublic: () => void this.joinPublicServer(),
-      onJoinServer: () => void this.joinServer(this.state.getServerAddress()),
-      onResume: () => this.resumeGame(),
-      onRestart: () => void this.restartCurrentMode(),
+      onStart: () => {
+        this.audio.activate();
+        void this.startOfflineGame();
+      },
+      onJoinPublic: () => {
+        this.audio.activate();
+        void this.joinPublicServer();
+      },
+      onJoinServer: () => {
+        this.audio.activate();
+        void this.joinServer(this.state.getServerAddress());
+      },
+      onResume: () => {
+        this.audio.activate();
+        this.resumeGame();
+      },
+      onRestart: () => {
+        this.audio.activate();
+        void this.restartCurrentMode();
+      },
       onToggleSettings: (open) => this.toggleSettings(open),
       onBuy: (id) => this.buyItem(id),
       onCloseShop: () => this.closeShop(),
@@ -160,9 +175,9 @@ export class Game {
   }
 
   private async startOfflineGame(): Promise<void> {
+    this.audio.activate();
     await this.multiplayer.leave();
     this.state.leaveMultiplayerSession();
-    this.audio.activate();
     this.state.resetRun();
     this.prepareWorldForMatch();
     this.state.startPlaying();
@@ -547,6 +562,9 @@ export class Game {
       if (!resources) {
         return;
       }
+      if (resources.copper <= 0 && resources.gold <= 0) {
+        return;
+      }
       this.audio.playCue('collect');
       this.state.addCurrency('copper', resources.copper);
       this.state.addCurrency('gold', resources.gold);
@@ -557,6 +575,9 @@ export class Game {
     if (prompt.type === 'machine') {
       const resources = this.world.collectMachine(prompt.id);
       if (!resources) {
+        return;
+      }
+      if (resources.gold <= 0 && resources.diamond <= 0) {
         return;
       }
       this.audio.playCue('collect');

@@ -55,6 +55,7 @@ export class AudioManager {
   private unlockBound = false;
   private resumePromise: Promise<void> | null = null;
   private pendingCues: SoundCue[] = [];
+  private activePhase: GamePhase = 'title';
 
   constructor() {
     this.bindUnlockListeners();
@@ -82,6 +83,7 @@ export class AudioManager {
       .resume()
       .then(() => {
         this.primeAudio();
+        this.kickMusicScheduler();
         this.flushPendingCues();
       })
       .catch((error) => {
@@ -93,6 +95,8 @@ export class AudioManager {
   }
 
   update(delta: number, snapshot: AudioSnapshot): void {
+    this.activePhase = snapshot.phase;
+
     if (!this.context || !this.musicGain) {
       return;
     }
@@ -260,9 +264,12 @@ export class AudioManager {
     };
 
     window.addEventListener('pointerdown', unlock, { passive: true, capture: true });
+    window.addEventListener('pointerup', unlock, { passive: true, capture: true });
     window.addEventListener('touchstart', unlock, { passive: true, capture: true });
+    window.addEventListener('touchend', unlock, { passive: true, capture: true });
     window.addEventListener('keydown', unlock, { passive: true, capture: true });
     window.addEventListener('mousedown', unlock, { passive: true, capture: true });
+    window.addEventListener('click', unlock, { passive: true, capture: true });
   }
 
   private createNoiseBuffer(): AudioBuffer | null {
@@ -507,6 +514,16 @@ export class AudioManager {
       this.playCueNow(cue, time);
       time += 0.02;
     }
+  }
+
+  private kickMusicScheduler(): void {
+    if (!this.context || !this.musicGain) {
+      return;
+    }
+
+    this.nextMusicTime = 0;
+    this.updateMusicMix(this.activePhase);
+    this.scheduleMusic();
   }
 
   private onVisibilityChange = (): void => {

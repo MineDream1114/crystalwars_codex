@@ -56,7 +56,10 @@ export class UIManager {
       .map((item, index) => this.renderHotbarSlot(item, index))
       .join('');
 
-    const notifications = this.state.notifications
+    const visibleNotifications = this.touchDevice
+      ? this.state.notifications.slice(-2)
+      : this.state.notifications;
+    const notifications = visibleNotifications
       .slice()
       .reverse()
       .map(
@@ -75,6 +78,16 @@ export class UIManager {
           }">${t(promptKey)}</div>`
         : '';
     const currentItemName = this.getItemName(this.state.getCurrentItem());
+    const bottomResourceRibbon = this.touchDevice
+      ? `
+        <div class="resource-ribbon">
+          ${this.renderResourcePill('copper', 'mini')}
+          ${this.renderResourcePill('gold', 'mini')}
+          ${this.renderResourcePill('emerald', 'mini')}
+          ${this.renderResourcePill('diamond', 'mini')}
+        </div>
+      `
+      : '';
     const tutorialRows = this.touchDevice
       ? [
           this.renderTutorialRow(t('mobile.movePad'), t('tutorial.move')),
@@ -133,14 +146,14 @@ export class UIManager {
       <div class="crosshair ${this.state.phase === 'playing' ? '' : 'hidden'}"></div>
 
       <div class="hud ${this.state.phase === 'title' ? 'hidden' : ''}">
-        <div class="hud__top">
+        <div class="hud__top ${this.touchDevice ? 'hud__top--touch' : ''}">
           ${onlineHud}
           <div class="objective-pill">
             <span class="objective-pill__label">${t('hud.objective')}</span>
             <strong>${t('hud.objectiveShort')}</strong>
             <span class="objective-pill__count">${objectiveCount}</span>
           </div>
-          <div class="resource-stack">
+          <div class="resource-stack resource-stack--top">
             ${this.renderResourcePill('copper')}
             ${this.renderResourcePill('gold')}
             ${this.renderResourcePill('emerald')}
@@ -148,7 +161,7 @@ export class UIManager {
           </div>
         </div>
 
-        <div class="notifications">${notifications}</div>
+        <div class="notifications ${this.touchDevice ? 'notifications--touch' : ''}">${notifications}</div>
 
         <div class="tutorial-card ${
           this.state.showTutorial && this.state.phase === 'playing' ? '' : 'hidden'
@@ -181,6 +194,7 @@ export class UIManager {
               <span>${t('hud.health')}</span>
               <strong>${this.state.health}</strong>
             </div>
+            ${bottomResourceRibbon}
             <div class="current-item-pill">
               <span>${t('hud.currentItem')}</span>
               <strong>${currentItemName}</strong>
@@ -365,11 +379,12 @@ export class UIManager {
   }
 
   private renderResourcePill(
-    currency: 'copper' | 'gold' | 'emerald' | 'diamond'
+    currency: 'copper' | 'gold' | 'emerald' | 'diamond',
+    variant: 'default' | 'mini' = 'default'
   ): string {
     const amount = this.state.inventory.currencies[currency];
     return `
-      <div class="resource-pill resource-pill--${currency}">
+      <div class="resource-pill resource-pill--${currency} resource-pill--${variant}">
         <span class="resource-pill__icon">${renderCurrencyIcon(currency)}</span>
         <span class="resource-pill__amount">${amount}</span>
       </div>

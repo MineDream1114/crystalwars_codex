@@ -126,6 +126,10 @@ export class TouchControls {
       isPlaying && touchDevice && isPortrait && !this.orientationHintDismissed;
     this.root.classList.toggle('hidden', !isPlaying || !touchDevice);
     this.root.classList.toggle('touch-controls--left-handed', this.state.isLeftHanded());
+    document.body.classList.toggle(
+      'touch-left-handed',
+      touchDevice && this.state.isLeftHanded()
+    );
     this.orientationCard.classList.toggle('hidden', !showOrientationHint);
 
     const t = this.state.localizer.t.bind(this.state.localizer);
