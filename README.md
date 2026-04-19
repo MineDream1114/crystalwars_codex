@@ -70,7 +70,13 @@ npm run build
 - `E`: interact with merchant, chests, island generators, and the center machine
 - `Esc`: unlock pointer / pause
 - Title screen lobby: enter a player name and server address to join friends online
-- Touch: drag the virtual joystick to move, drag the right side to look, tap the right side to use the current item, tap the hotbar to switch items, use the `Jump` and `Interact` buttons on touch devices
+- Touch:
+  - drag the virtual joystick to move
+  - drag the right side to look
+  - tap or hold the large `Use` button to attack / mine / place continuously
+  - tap hotbar slots to switch items
+  - use the `Jump`, `Interact`, `Sprint`, `Pause`, and `Fullscreen` buttons
+  - mobile settings include touch sensitivity, left-handed layout, auto-sprint, and haptics
 
 ## Gameplay Summary
 

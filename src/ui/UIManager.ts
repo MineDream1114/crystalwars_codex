@@ -18,10 +18,16 @@ interface UIActions {
   onSetPlayerName: (name: string) => void;
   onSetServerAddress: (address: string) => void;
   onCopyInvite: () => void;
+  onSetTouchSensitivity: (value: number) => void;
+  onSetLeftHanded: (enabled: boolean) => void;
+  onSetAutoSprint: (enabled: boolean) => void;
+  onSetHaptics: (enabled: boolean) => void;
 }
 
 export class UIManager {
   private readonly root = document.createElement('div');
+  private readonly touchDevice =
+    window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
 
   constructor(
     private readonly state: GameState,
@@ -60,6 +66,27 @@ export class UIManager {
     const prompt = this.state.interactionPrompt
       ? `<div class="interaction-pill">${t(this.state.interactionPrompt.key)}</div>`
       : '';
+    const tutorialRows = this.touchDevice
+      ? [
+          this.renderTutorialRow(t('mobile.movePad'), t('tutorial.move')),
+          this.renderTutorialRow(t('mobile.swipeLook'), t('tutorial.look')),
+          this.renderTutorialRow(t('mobile.actionButton'), t('tutorial.use')),
+          this.renderTutorialRow(t('buttons.jump'), t('tutorial.jump')),
+          this.renderTutorialRow(t('buttons.interact'), t('tutorial.interact')),
+          this.renderTutorialRow(t('mobile.hotbarTap'), t('tutorial.switch')),
+          this.renderTutorialRow(t('buttons.sprint'), t('tutorial.sprint')),
+          this.renderTutorialRow(t('buttons.pause'), t('tutorial.pause'))
+        ].join('')
+      : [
+          this.renderTutorialRow('W A S D', t('tutorial.move')),
+          this.renderTutorialRow('Space', t('tutorial.jump')),
+          this.renderTutorialRow('Shift', t('tutorial.sprint')),
+          this.renderTutorialRow('Mouse', t('tutorial.look')),
+          this.renderTutorialRow('Left Click', t('tutorial.use')),
+          this.renderTutorialRow('1-7 / Scroll', t('tutorial.switch')),
+          this.renderTutorialRow('E', t('tutorial.interact')),
+          this.renderTutorialRow('Esc', t('tutorial.pause'))
+        ].join('');
     const roster = this.state.multiplayer.players
       .map(
         (player) => `
@@ -119,14 +146,7 @@ export class UIManager {
         }">
           <div class="tutorial-card__title">${t('tutorial.title')}</div>
           <div class="tutorial-card__rows">
-            ${this.renderTutorialRow('W A S D', t('tutorial.move'))}
-            ${this.renderTutorialRow('Space', t('tutorial.jump'))}
-            ${this.renderTutorialRow('Shift', t('tutorial.sprint'))}
-            ${this.renderTutorialRow('Mouse', t('tutorial.look'))}
-            ${this.renderTutorialRow('Left Click', t('tutorial.use'))}
-            ${this.renderTutorialRow('1-7 / Scroll', t('tutorial.switch'))}
-            ${this.renderTutorialRow('E', t('tutorial.interact'))}
-            ${this.renderTutorialRow('Esc', t('tutorial.pause'))}
+            ${tutorialRows}
           </div>
           <div class="tutorial-card__divider"></div>
           <div class="tutorial-card__goals">
@@ -134,6 +154,11 @@ export class UIManager {
             <div>${t('tutorial.goalResources')}</div>
             <div>${t('tutorial.goalShop')}</div>
             <div>${t('tutorial.goalChests')}</div>
+            ${
+              this.touchDevice
+                ? `<div>${t('mobile.holdActionTip')}</div><div>${t('mobile.fullscreenTip')}</div>`
+                : ''
+            }
           </div>
           <button class="button button--primary button--wide" data-action="dismiss-tutorial">
             ${t('tutorial.cta')}
@@ -263,6 +288,51 @@ export class UIManager {
               <option value="ja" ${this.state.getLanguage() === 'ja' ? 'selected' : ''}>${t('settings.japanese')}</option>
             </select>
           </label>
+          ${
+            this.touchDevice
+              ? `
+                <div class="settings-group">
+                  <div class="settings-group__title">${t('settings.mobileTitle')}</div>
+                  <label class="field">
+                    <span>${t('settings.touchSensitivity')}</span>
+                    <input
+                      data-setting="touch-sensitivity"
+                      type="range"
+                      min="0.5"
+                      max="1.8"
+                      step="0.05"
+                      value="${this.state.getTouchSensitivity()}"
+                    />
+                    <div class="field__hint">${this.state.getTouchSensitivity().toFixed(2)}x</div>
+                  </label>
+                  <label class="toggle-field">
+                    <span>${t('settings.leftHanded')}</span>
+                    <input
+                      data-setting="left-handed"
+                      type="checkbox"
+                      ${this.state.isLeftHanded() ? 'checked' : ''}
+                    />
+                  </label>
+                  <label class="toggle-field">
+                    <span>${t('settings.autoSprint')}</span>
+                    <input
+                      data-setting="auto-sprint"
+                      type="checkbox"
+                      ${this.state.isAutoSprintEnabled() ? 'checked' : ''}
+                    />
+                  </label>
+                  <label class="toggle-field">
+                    <span>${t('settings.haptics')}</span>
+                    <input
+                      data-setting="haptics"
+                      type="checkbox"
+                      ${this.state.isHapticsEnabled() ? 'checked' : ''}
+                    />
+                  </label>
+                </div>
+              `
+              : ''
+          }
         </div>
       </div>
 
@@ -450,12 +520,36 @@ export class UIManager {
   };
 
   private handleChange = (event: Event): void => {
-    const target = event.target as HTMLSelectElement | null;
-    if (!target || target.dataset.setting !== 'language') {
+    const target = event.target as HTMLInputElement | HTMLSelectElement | null;
+    if (!target || !target.dataset.setting) {
       return;
     }
-    const language = target.value === 'ja' ? 'ja' : 'en';
-    this.actions.onSetLanguage(language);
+
+    if (target.dataset.setting === 'language') {
+      const language = target.value === 'ja' ? 'ja' : 'en';
+      this.actions.onSetLanguage(language);
+      return;
+    }
+
+    if (target.dataset.setting === 'left-handed') {
+      this.actions.onSetLeftHanded(
+        (target as HTMLInputElement).checked
+      );
+      return;
+    }
+
+    if (target.dataset.setting === 'auto-sprint') {
+      this.actions.onSetAutoSprint(
+        (target as HTMLInputElement).checked
+      );
+      return;
+    }
+
+    if (target.dataset.setting === 'haptics') {
+      this.actions.onSetHaptics(
+        (target as HTMLInputElement).checked
+      );
+    }
   };
 
   private handleInput = (event: Event): void => {
@@ -471,6 +565,11 @@ export class UIManager {
 
     if (target.dataset.setting === 'server-address') {
       this.actions.onSetServerAddress(target.value);
+      return;
+    }
+
+    if (target.dataset.setting === 'touch-sensitivity') {
+      this.actions.onSetTouchSensitivity(Number(target.value));
     }
   };
 }

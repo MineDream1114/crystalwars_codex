@@ -1,5 +1,6 @@
 import {
   DEFAULT_LANGUAGE,
+  MOBILE_CONFIG,
   MULTIPLAYER_CONFIG,
   SHOP_ITEMS,
   STARTING_LOADOUT,
@@ -48,6 +49,13 @@ interface MultiplayerState {
   errorKey: string | null;
 }
 
+interface MobileSettingsState {
+  touchSensitivity: number;
+  leftHanded: boolean;
+  autoSprint: boolean;
+  haptics: boolean;
+}
+
 export class GameState {
   readonly localizer: Localizer;
 
@@ -61,6 +69,7 @@ export class GameState {
   showTutorial = true;
   showSettings = false;
   multiplayer: MultiplayerState;
+  mobileSettings: MobileSettingsState;
   private destroyedCrystalIds = new Set<string>();
   private notificationId = 0;
   private listeners = new Set<Listener>();
@@ -72,6 +81,7 @@ export class GameState {
     this.health = this.maxHealth;
     this.inventory = this.createStartingInventory();
     this.multiplayer = this.createMultiplayerState();
+    this.mobileSettings = this.createMobileSettings();
     this.persistLanguage(language);
   }
 
@@ -129,6 +139,20 @@ export class GameState {
     };
   }
 
+  private createMobileSettings(): MobileSettingsState {
+    return {
+      touchSensitivity: this.readStoredNumber(
+        STORAGE_KEYS.touchSensitivity,
+        MOBILE_CONFIG.defaultTouchSensitivity,
+        MOBILE_CONFIG.minTouchSensitivity,
+        MOBILE_CONFIG.maxTouchSensitivity
+      ),
+      leftHanded: this.readStoredBoolean(STORAGE_KEYS.leftHanded, false),
+      autoSprint: this.readStoredBoolean(STORAGE_KEYS.autoSprint, true),
+      haptics: this.readStoredBoolean(STORAGE_KEYS.haptics, true)
+    };
+  }
+
   private readStoredValue(key: string, fallback: string): string {
     try {
       const value = window.localStorage.getItem(key)?.trim();
@@ -136,6 +160,39 @@ export class GameState {
     } catch {
       return fallback;
     }
+  }
+
+  private readStoredBoolean(key: string, fallback: boolean): boolean {
+    try {
+      const value = window.localStorage.getItem(key);
+      if (value === 'true') {
+        return true;
+      }
+      if (value === 'false') {
+        return false;
+      }
+    } catch {
+      return fallback;
+    }
+    return fallback;
+  }
+
+  private readStoredNumber(
+    key: string,
+    fallback: number,
+    min: number,
+    max: number
+  ): number {
+    try {
+      const raw = window.localStorage.getItem(key);
+      const value = raw === null ? Number.NaN : Number(raw);
+      if (Number.isFinite(value)) {
+        return Math.max(min, Math.min(max, value));
+      }
+    } catch {
+      return fallback;
+    }
+    return fallback;
   }
 
   resetRun(preserveMultiplayer = false): void {
@@ -261,6 +318,61 @@ export class GameState {
 
   getPlayerCount(): number {
     return this.multiplayer.players.length;
+  }
+
+  getTouchSensitivity(): number {
+    return this.mobileSettings.touchSensitivity;
+  }
+
+  setTouchSensitivity(value: number): void {
+    const clamped = Math.max(
+      MOBILE_CONFIG.minTouchSensitivity,
+      Math.min(MOBILE_CONFIG.maxTouchSensitivity, value)
+    );
+    this.mobileSettings.touchSensitivity = Number(clamped.toFixed(2));
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEYS.touchSensitivity,
+        String(this.mobileSettings.touchSensitivity)
+      );
+    } catch {}
+    this.emit();
+  }
+
+  isLeftHanded(): boolean {
+    return this.mobileSettings.leftHanded;
+  }
+
+  setLeftHanded(enabled: boolean): void {
+    this.mobileSettings.leftHanded = enabled;
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.leftHanded, String(enabled));
+    } catch {}
+    this.emit();
+  }
+
+  isAutoSprintEnabled(): boolean {
+    return this.mobileSettings.autoSprint;
+  }
+
+  setAutoSprintEnabled(enabled: boolean): void {
+    this.mobileSettings.autoSprint = enabled;
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.autoSprint, String(enabled));
+    } catch {}
+    this.emit();
+  }
+
+  isHapticsEnabled(): boolean {
+    return this.mobileSettings.haptics;
+  }
+
+  setHapticsEnabled(enabled: boolean): void {
+    this.mobileSettings.haptics = enabled;
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.haptics, String(enabled));
+    } catch {}
+    this.emit();
   }
 
   getDestroyedCrystalIds(): string[] {

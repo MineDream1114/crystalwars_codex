@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import { multiplayerRelayPlugin } from './multiplayer-relay.mjs';
 
 export default defineConfig({
-  base: '/crystalwars_codex/',
   plugins: [multiplayerRelayPlugin()],
   build: {
     chunkSizeWarningLimit: 700

@@ -6,6 +6,7 @@ export class InputManager {
   private tutorialDismissed = false;
   private virtualMove = { x: 0, y: 0 };
   private virtualJumpPressed = false;
+  private virtualSprintPressed = false;
   private lookDelta = { x: 0, y: 0 };
   private readonly touchDevice =
     window.matchMedia('(pointer: coarse)').matches ||
@@ -45,6 +46,14 @@ export class InputManager {
     return this.pressed.has('Space') || this.virtualJumpPressed;
   }
 
+  isSprintPressed(): boolean {
+    return (
+      this.pressed.has('ShiftLeft') ||
+      this.pressed.has('ShiftRight') ||
+      this.virtualSprintPressed
+    );
+  }
+
   consumeJumpRequest(): boolean {
     if (!this.jumpRequested) {
       return false;
@@ -66,6 +75,13 @@ export class InputManager {
       this.jumpRequested = true;
     }
     this.virtualJumpPressed = pressed;
+    if (pressed) {
+      this.tutorialDismissed = true;
+    }
+  }
+
+  setVirtualSprintPressed(pressed: boolean): void {
+    this.virtualSprintPressed = pressed;
     if (pressed) {
       this.tutorialDismissed = true;
     }

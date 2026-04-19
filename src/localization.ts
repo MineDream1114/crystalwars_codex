@@ -11,6 +11,11 @@ const translations = {
       joinPublic: 'Join Public 1111',
       joinServer: 'Join By Address',
       copyInvite: 'Copy Invite',
+      use: 'Action',
+      sprint: 'Sprint',
+      pause: 'Pause',
+      fullscreen: 'Fullscreen',
+      exitFullscreen: 'Exit Fullscreen',
       settings: 'Settings',
       resume: 'Resume',
       close: 'Close',
@@ -23,8 +28,23 @@ const translations = {
     settings: {
       title: 'Settings',
       language: 'Language',
+      mobileTitle: 'Mobile Controls',
+      touchSensitivity: 'Touch Look Sensitivity',
+      leftHanded: 'Left-Handed Layout',
+      autoSprint: 'Auto Sprint',
+      haptics: 'Haptic Feedback',
       english: 'English',
       japanese: 'Japanese'
+    },
+    mobile: {
+      movePad: 'Move Pad',
+      swipeLook: 'Swipe Right Side',
+      actionButton: 'Action Button',
+      hotbarTap: 'Tap Hotbar',
+      rotateTitle: 'Landscape Recommended',
+      rotateBody: 'Rotate your phone sideways for the clearest controls and widest view.',
+      holdActionTip: 'Hold the Action button to keep mining or attacking.',
+      fullscreenTip: 'Use Fullscreen for a cleaner mobile HUD.'
     },
     multiplayer: {
       title: 'Online Lobby',
@@ -173,6 +193,11 @@ const translations = {
       joinPublic: '公開 1111 に入る',
       joinServer: 'アドレスで参加',
       copyInvite: '招待をコピー',
+      use: 'アクション',
+      sprint: 'ダッシュ',
+      pause: '一時停止',
+      fullscreen: '全画面',
+      exitFullscreen: '全画面終了',
       settings: '設定',
       resume: '再開',
       close: '閉じる',
@@ -185,8 +210,23 @@ const translations = {
     settings: {
       title: '設定',
       language: '言語',
+      mobileTitle: 'スマホ操作',
+      touchSensitivity: '視点感度',
+      leftHanded: '左利きレイアウト',
+      autoSprint: '自動ダッシュ',
+      haptics: '触覚フィードバック',
       english: '英語',
       japanese: '日本語'
+    },
+    mobile: {
+      movePad: '移動パッド',
+      swipeLook: '右側スワイプ',
+      actionButton: 'アクションボタン',
+      hotbarTap: 'ホットバータップ',
+      rotateTitle: '横向き推奨',
+      rotateBody: '見やすさと操作性のため、スマートフォンを横向きにすると遊びやすくなります。',
+      holdActionTip: 'アクションボタン長押しで採掘や攻撃を続けられます。',
+      fullscreenTip: '全画面にするとスマホでより遊びやすくなります。'
     },
     multiplayer: {
       title: 'オンラインロビー',

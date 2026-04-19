@@ -3,6 +3,7 @@ import {
   BOW_CONFIG,
   DOTTER_CONFIG,
   JUMP_PAD_CONFIG,
+  MOBILE_CONFIG,
   MULTIPLAYER_CONFIG,
   PLAYER_CONFIG,
   SHOP_ITEMS,
@@ -33,6 +34,10 @@ interface Projectile {
   ttl: number;
 }
 
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: string) => Promise<void>;
+};
+
 export class Game {
   private readonly scene = new THREE.Scene();
   private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -56,7 +61,7 @@ export class Game {
   private crystalHpState: Record<string, number> = {};
 
   constructor(private readonly mount: HTMLElement) {
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(this.getTargetPixelRatio());
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = false;
     this.renderer.domElement.className = 'game-canvas';
@@ -93,7 +98,11 @@ export class Game {
       onSetLanguage: (language) => this.state.setLanguage(language),
       onSetPlayerName: (name) => this.state.setPlayerName(name),
       onSetServerAddress: (address) => this.state.setServerAddress(address),
-      onCopyInvite: () => void this.copyInviteAddress()
+      onCopyInvite: () => void this.copyInviteAddress(),
+      onSetTouchSensitivity: (value) => this.state.setTouchSensitivity(value),
+      onSetLeftHanded: (enabled) => this.state.setLeftHanded(enabled),
+      onSetAutoSprint: (enabled) => this.state.setAutoSprintEnabled(enabled),
+      onSetHaptics: (enabled) => this.state.setHapticsEnabled(enabled)
     });
     this.touchControls = new TouchControls(this.state, this.input, {
       onUse: () => {
@@ -105,7 +114,9 @@ export class Game {
         if (this.state.phase === 'playing') {
           this.handleInteraction();
         }
-      }
+      },
+      onPause: () => this.handleTouchPause(),
+      onToggleFullscreen: () => void this.toggleFullscreen()
     });
 
     this.bindEvents();
@@ -127,6 +138,7 @@ export class Game {
   private bindEvents(): void {
     window.addEventListener('resize', this.onResize);
     window.addEventListener('keydown', this.onKeyDown);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
     window.addEventListener(
       'wheel',
       this.onWheel,
@@ -155,6 +167,7 @@ export class Game {
     this.prepareWorldForMatch();
     this.state.startPlaying();
     this.lockPlayerIfNeeded();
+    void this.enterTouchFullscreen();
   }
 
   private async restartCurrentMode(): Promise<void> {
@@ -191,6 +204,7 @@ export class Game {
       });
       this.applyMultiplayerRoomState(room, true);
       this.lockPlayerIfNeeded();
+      void this.enterTouchFullscreen();
     } catch {
       this.state.setMultiplayerError('multiplayer.errors.connection');
     }
@@ -210,6 +224,74 @@ export class Game {
   private lockPlayerIfNeeded(): void {
     if (!this.input.isTouchDevice()) {
       this.player.lock();
+    }
+  }
+
+  private getTargetPixelRatio(): number {
+    const maxRatio = this.input.isTouchDevice() ? MOBILE_CONFIG.maxPixelRatio : 2;
+    return Math.min(window.devicePixelRatio, maxRatio);
+  }
+
+  private async enterTouchFullscreen(): Promise<void> {
+    if (!this.input.isTouchDevice()) {
+      return;
+    }
+    if (document.fullscreenElement || !document.fullscreenEnabled) {
+      return;
+    }
+    try {
+      await document.documentElement.requestFullscreen();
+      await this.lockLandscapeOrientation();
+    } catch {
+      // Ignore browsers that block fullscreen or orientation lock.
+    }
+  }
+
+  private async toggleFullscreen(): Promise<void> {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+      if (document.fullscreenEnabled) {
+        await document.documentElement.requestFullscreen();
+        await this.lockLandscapeOrientation();
+      }
+    } catch {
+      // Ignore fullscreen API failures on unsupported browsers.
+    }
+  }
+
+  private async lockLandscapeOrientation(): Promise<void> {
+    const orientation = screen.orientation as LockableScreenOrientation | undefined;
+    if (!orientation?.lock) {
+      return;
+    }
+    try {
+      await orientation.lock('landscape');
+    } catch {
+      // Ignore unsupported or user-blocked orientation locks.
+    }
+  }
+
+  private handleTouchPause(): void {
+    if (this.state.phase === 'shop') {
+      this.closeShop();
+      return;
+    }
+
+    if (this.state.showSettings) {
+      this.toggleSettings(false);
+      return;
+    }
+
+    if (this.state.phase === 'playing') {
+      this.state.setPhase('paused');
+      return;
+    }
+
+    if (this.state.phase === 'paused') {
+      this.resumeGame();
     }
   }
 
@@ -302,6 +384,7 @@ export class Game {
     this.audio.activate();
     this.state.setPhase('playing');
     this.lockPlayerIfNeeded();
+    void this.enterTouchFullscreen();
   }
 
   private toggleSettings(open: boolean): void {
@@ -518,9 +601,26 @@ export class Game {
   };
 
   private onResize = (): void => {
+    this.renderer.setPixelRatio(this.getTargetPixelRatio());
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+  };
+
+  private onVisibilityChange = (): void => {
+    if (document.visibilityState !== 'hidden') {
+      return;
+    }
+
+    if (this.state.phase !== 'playing') {
+      return;
+    }
+
+    if (this.player.isLocked()) {
+      this.ignoreNextUnlockPause = true;
+      this.player.unlock();
+    }
+    this.state.setPhase('paused');
   };
 
   private onKeyDown = (event: KeyboardEvent): void => {

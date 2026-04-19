@@ -130,7 +130,7 @@ export class PlayerController {
       this.movement.normalize();
     }
 
-    const targetSpeed = input.isPressed('ShiftLeft') || input.isPressed('ShiftRight')
+    const targetSpeed = input.isSprintPressed()
       ? PLAYER_CONFIG.sprintSpeed
       : PLAYER_CONFIG.walkSpeed;
 

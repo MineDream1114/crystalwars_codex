@@ -12,7 +12,11 @@ export const STORAGE_KEYS = {
   language: 'island-crystal-breaker-language',
   languageDefaultVersion: 'island-crystal-breaker-language-default-version',
   playerName: 'island-crystal-breaker-player-name',
-  serverAddress: 'island-crystal-breaker-server-address'
+  serverAddress: 'island-crystal-breaker-server-address',
+  touchSensitivity: 'island-crystal-breaker-touch-sensitivity',
+  leftHanded: 'island-crystal-breaker-left-handed',
+  autoSprint: 'island-crystal-breaker-auto-sprint',
+  haptics: 'island-crystal-breaker-haptics'
 } as const;
 
 const LANGUAGE_DEFAULT_VERSION = '2026-04-18-force-english-default';
@@ -119,6 +123,17 @@ export const MULTIPLAYER_CONFIG = {
   maxPlayerNameLength: 18,
   maxServerAddressLength: 24,
   presenceInterval: 0.12
+} as const;
+
+export const MOBILE_CONFIG = {
+  maxPixelRatio: 1.35,
+  joystickDeadzone: 0.18,
+  autoSprintThreshold: 0.82,
+  holdRepeatDelayMs: 240,
+  holdRepeatIntervalMs: 120,
+  defaultTouchSensitivity: 1,
+  minTouchSensitivity: 0.5,
+  maxTouchSensitivity: 1.8
 } as const;
 
 export const AUDIO_CONFIG = {
