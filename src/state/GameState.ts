@@ -388,7 +388,11 @@ export class GameState {
   }
 
   persistLanguage(language: Language): void {
-    window.localStorage.setItem(STORAGE_KEYS.language, language);
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.language, language);
+    } catch {
+      // Ignore browsers that block storage access.
+    }
   }
 
   getLanguage(): Language {

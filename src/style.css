@@ -142,6 +142,14 @@ body.touch-device select {
   gap: 10px;
 }
 
+.hud__status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .objective-pill,
 .resource-pill,
 .health-pill,
@@ -312,6 +320,31 @@ body.touch-device select {
   border-radius: 999px;
 }
 
+.current-item-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  backdrop-filter: blur(24px);
+  background:
+    linear-gradient(180deg, rgba(31, 36, 63, 0.88), rgba(17, 20, 37, 0.94));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow), var(--glow);
+}
+
+.current-item-pill span {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.current-item-pill strong {
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
 .health-pill span {
   color: var(--text-dim);
   font-size: 0.72rem;
@@ -330,6 +363,11 @@ body.touch-device select {
   background: rgba(18, 111, 122, 0.9);
   color: #dbfbff;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.interaction-pill--mobile {
+  padding: 6px 12px;
+  font-size: 0.92rem;
 }
 
 .hotbar-shell {
@@ -421,6 +459,71 @@ body.touch-device select {
     radial-gradient(circle at center, rgba(143, 86, 255, 0.06), transparent 30%),
     linear-gradient(180deg, rgba(4, 7, 16, 0.62), rgba(4, 6, 14, 0.86));
   pointer-events: auto;
+}
+
+.fatal-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding:
+    calc(18px + var(--safe-top))
+    calc(18px + var(--safe-right))
+    calc(18px + var(--safe-bottom))
+    calc(18px + var(--safe-left));
+  background:
+    radial-gradient(circle at top, rgba(145, 87, 255, 0.15), transparent 34%),
+    linear-gradient(180deg, #0a0d1b 0%, #0e1224 100%);
+  color: var(--text-main);
+}
+
+.fatal-screen__card {
+  width: min(92vw, 520px);
+  padding: 26px 22px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(24, 28, 50, 0.92), rgba(14, 17, 31, 0.96));
+  border: 1px solid rgba(167, 125, 255, 0.2);
+  box-shadow: var(--shadow), var(--glow);
+}
+
+.fatal-screen__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(113, 83, 255, 0.14);
+  border: 1px solid rgba(167, 125, 255, 0.16);
+  color: #c8afff;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.fatal-screen__title {
+  margin: 18px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+.fatal-screen__body {
+  margin: 14px 0 0;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.fatal-screen__details {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(171, 178, 224, 0.12);
+  color: #dfe6ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 0.9rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body.touch-device .screen {
@@ -940,14 +1043,14 @@ body.touch-device .lobby-card {
 
 .touch-orientation-card {
   position: absolute;
-  top: 50%;
+  top: calc(74px + var(--safe-top));
   left: 50%;
-  width: min(82vw, 340px);
-  transform: translate(-50%, -50%);
-  padding: 18px 20px;
+  width: min(82vw, 320px);
+  transform: translateX(-50%);
+  padding: 12px 14px;
   border-radius: 22px;
-  text-align: center;
-  pointer-events: none;
+  text-align: left;
+  pointer-events: auto;
   backdrop-filter: blur(24px);
   background:
     linear-gradient(180deg, rgba(28, 32, 57, 0.9), rgba(12, 16, 31, 0.96));
@@ -955,21 +1058,38 @@ body.touch-device .lobby-card {
   box-shadow: var(--shadow), var(--glow);
 }
 
+.touch-orientation-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .touch-orientation-card__title {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 0.96rem;
   color: #d8c0ff;
 }
 
 .touch-orientation-card__body {
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--text-soft);
-  line-height: 1.45;
+  line-height: 1.35;
+  font-size: 0.92rem;
+}
+
+.touch-orientation-card__close {
+  border: 1px solid rgba(171, 178, 224, 0.14);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font: inherit;
 }
 
 body.is-portrait .touch-look-zone {
   top: calc(88px + var(--safe-top));
-  bottom: calc(170px + var(--safe-bottom));
+  bottom: calc(132px + var(--safe-bottom));
 }
 
 .touch-controls--left-handed .touch-joystick {
@@ -1043,16 +1163,61 @@ body.is-portrait .touch-look-zone {
     grid-template-columns: repeat(4, minmax(68px, 1fr));
   }
 
+  body.touch-device .hotbar-shell {
+    width: min(calc(100vw - 24px - var(--safe-left) - var(--safe-right)), 420px);
+    padding: 6px 8px;
+  }
+
+  body.touch-device .hotbar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(58px, 1fr);
+    grid-template-columns: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+
+  body.touch-device .hotbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.touch-device .hotbar-slot {
+    min-width: 58px;
+    min-height: 58px;
+    padding: 6px;
+    gap: 0;
+  }
+
+  body.touch-device .hotbar-slot__label,
+  body.touch-device .hotbar-slot__index {
+    display: none;
+  }
+
+  body.touch-device .hotbar-slot__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  body.touch-device .hotbar-slot__count {
+    top: auto;
+    bottom: 6px;
+    right: 6px;
+    font-size: 0.56rem;
+  }
+
   .notifications {
     left: calc(12px + var(--safe-left));
-    bottom: 214px;
+    bottom: 166px;
     width: min(320px, calc(100vw - 24px - var(--safe-left) - var(--safe-right)));
   }
 
   .touch-look-zone {
     left: 116px;
     right: 116px;
-    bottom: calc(114px + var(--safe-bottom));
+    bottom: calc(98px + var(--safe-bottom));
   }
 
   .touch-joystick {
@@ -1114,10 +1279,6 @@ body.is-portrait .touch-look-zone {
     padding: 18px;
   }
 
-  .hotbar {
-    grid-template-columns: repeat(2, minmax(70px, 1fr));
-  }
-
   .shop-grid {
     grid-template-columns: 1fr;
   }
@@ -1125,6 +1286,7 @@ body.is-portrait .touch-look-zone {
   .touch-look-zone {
     left: 98px;
     right: 98px;
+    bottom: calc(90px + var(--safe-bottom));
   }
 
   .touch-joystick {
@@ -1162,5 +1324,9 @@ body.is-portrait .touch-look-zone {
   body.touch-device .tutorial-card {
     width: min(94vw, 420px);
     padding: 22px 18px;
+  }
+
+  body.touch-device .current-item-pill {
+    max-width: 86vw;
   }
 }

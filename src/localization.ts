@@ -41,6 +41,10 @@ const translations = {
       swipeLook: 'Swipe Right Side',
       actionButton: 'Action Button',
       hotbarTap: 'Tap Hotbar',
+      shopPrompt: 'Tap Interact to open the merchant shop',
+      chestPrompt: 'Tap Interact to open the chest',
+      generatorPrompt: 'Tap Interact to collect island resources',
+      machinePrompt: 'Tap Interact to collect machine drops',
       rotateTitle: 'Landscape Recommended',
       rotateBody: 'Rotate your phone sideways for the clearest controls and widest view.',
       holdActionTip: 'Hold the Action button to keep mining or attacking.',
@@ -223,6 +227,10 @@ const translations = {
       swipeLook: '右側スワイプ',
       actionButton: 'アクションボタン',
       hotbarTap: 'ホットバータップ',
+      shopPrompt: 'インタラクトで商人ショップを開く',
+      chestPrompt: 'インタラクトでチェストを開く',
+      generatorPrompt: 'インタラクトで資源を回収する',
+      machinePrompt: 'インタラクトで中央マシンの資源を回収する',
       rotateTitle: '横向き推奨',
       rotateBody: '見やすさと操作性のため、スマートフォンを横向きにすると遊びやすくなります。',
       holdActionTip: 'アクションボタン長押しで採掘や攻撃を続けられます。',
@@ -377,7 +385,11 @@ export class Localizer {
 
   setLanguage(language: Language): void {
     this.language = language;
-    window.localStorage.setItem(STORAGE_KEYS.language, language);
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.language, language);
+    } catch {
+      // Ignore browsers that block storage access.
+    }
   }
 
   getLanguage(): Language {

@@ -28,6 +28,9 @@ export class UIManager {
   private readonly root = document.createElement('div');
   private readonly touchDevice =
     window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  private mobilePromptKey: string | null = null;
+  private mobilePromptVisible = false;
+  private mobilePromptTimer: number | null = null;
 
   constructor(
     private readonly state: GameState,
@@ -62,10 +65,16 @@ export class UIManager {
       )
       .join('');
 
+    this.syncMobilePrompt();
     const objectiveCount = `${this.state.crystalsDestroyed}/${WORLD_CONFIG.crystalsPerGame}`;
-    const prompt = this.state.interactionPrompt
-      ? `<div class="interaction-pill">${t(this.state.interactionPrompt.key)}</div>`
-      : '';
+    const promptKey = this.getInteractionPromptKey();
+    const prompt =
+      promptKey && (!this.touchDevice || this.mobilePromptVisible)
+        ? `<div class="interaction-pill interaction-pill--${
+            this.touchDevice ? 'mobile' : 'desktop'
+          }">${t(promptKey)}</div>`
+        : '';
+    const currentItemName = this.getItemName(this.state.getCurrentItem());
     const tutorialRows = this.touchDevice
       ? [
           this.renderTutorialRow(t('mobile.movePad'), t('tutorial.move')),
@@ -167,9 +176,15 @@ export class UIManager {
 
         <div class="hud__bottom">
           ${prompt}
-          <div class="health-pill">
-            <span>${t('hud.health')}</span>
-            <strong>${this.state.health}</strong>
+          <div class="hud__status-row">
+            <div class="health-pill">
+              <span>${t('hud.health')}</span>
+              <strong>${this.state.health}</strong>
+            </div>
+            <div class="current-item-pill">
+              <span>${t('hud.currentItem')}</span>
+              <strong>${currentItemName}</strong>
+            </div>
           </div>
           <div class="hotbar-shell">
             <div class="hotbar">${hotbar}</div>
@@ -472,6 +487,64 @@ export class UIManager {
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  private getInteractionPromptKey(): string | null {
+    const key = this.state.interactionPrompt?.key ?? null;
+    if (!key) {
+      return null;
+    }
+
+    if (!this.touchDevice) {
+      return key;
+    }
+
+    const mobilePromptMap: Record<string, string> = {
+      'hud.shopPrompt': 'mobile.shopPrompt',
+      'hud.chestPrompt': 'mobile.chestPrompt',
+      'hud.generatorPrompt': 'mobile.generatorPrompt',
+      'hud.machinePrompt': 'mobile.machinePrompt'
+    };
+
+    return mobilePromptMap[key] ?? key;
+  }
+
+  private syncMobilePrompt(): void {
+    if (!this.touchDevice || this.state.phase !== 'playing') {
+      this.mobilePromptKey = null;
+      this.mobilePromptVisible = false;
+      if (this.mobilePromptTimer !== null) {
+        window.clearTimeout(this.mobilePromptTimer);
+        this.mobilePromptTimer = null;
+      }
+      return;
+    }
+
+    const promptKey = this.getInteractionPromptKey();
+    if (!promptKey) {
+      this.mobilePromptKey = null;
+      this.mobilePromptVisible = false;
+      if (this.mobilePromptTimer !== null) {
+        window.clearTimeout(this.mobilePromptTimer);
+        this.mobilePromptTimer = null;
+      }
+      return;
+    }
+
+    if (promptKey === this.mobilePromptKey) {
+      return;
+    }
+
+    this.mobilePromptKey = promptKey;
+    this.mobilePromptVisible = true;
+    if (this.mobilePromptTimer !== null) {
+      window.clearTimeout(this.mobilePromptTimer);
+    }
+    this.mobilePromptTimer = window.setTimeout(() => {
+      this.mobilePromptTimer = null;
+      this.mobilePromptVisible = false;
+      this.render();
+    }, 2400);
   }
 
   private handleClick = (event: Event): void => {

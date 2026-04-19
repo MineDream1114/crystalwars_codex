@@ -35,6 +35,8 @@ export class TouchControls {
   private manualSprint = false;
   private useRepeatTimeout: number | null = null;
   private useRepeatInterval: number | null = null;
+  private orientationHintDismissed = false;
+  private orientationHintTimer: number | null = null;
   private readonly joystickRadius = 56;
 
   constructor(
@@ -112,6 +114,7 @@ export class TouchControls {
     this.state.subscribe(() => this.render());
     window.addEventListener('resize', this.onViewportChange, { passive: true });
     document.addEventListener('fullscreenchange', this.onViewportChange);
+    this.orientationCard.addEventListener('pointerdown', this.onOrientationHintDismiss);
     this.render();
   }
 
@@ -119,9 +122,11 @@ export class TouchControls {
     const isPlaying = this.state.phase === 'playing';
     const touchDevice = this.input.isTouchDevice();
     const isPortrait = window.innerHeight > window.innerWidth;
+    const showOrientationHint =
+      isPlaying && touchDevice && isPortrait && !this.orientationHintDismissed;
     this.root.classList.toggle('hidden', !isPlaying || !touchDevice);
     this.root.classList.toggle('touch-controls--left-handed', this.state.isLeftHanded());
-    this.orientationCard.classList.toggle('hidden', !isPlaying || !touchDevice || !isPortrait);
+    this.orientationCard.classList.toggle('hidden', !showOrientationHint);
 
     const t = this.state.localizer.t.bind(this.state.localizer);
     this.useButton.textContent = t('buttons.use');
@@ -133,14 +138,50 @@ export class TouchControls {
       ? t('buttons.exitFullscreen')
       : t('buttons.fullscreen');
     this.orientationCard.innerHTML = `
-      <div class="touch-orientation-card__title">${t('mobile.rotateTitle')}</div>
+      <div class="touch-orientation-card__header">
+        <div class="touch-orientation-card__title">${t('mobile.rotateTitle')}</div>
+        <button type="button" class="touch-orientation-card__close" data-close-orientation>
+          ${t('buttons.close')}
+        </button>
+      </div>
       <div class="touch-orientation-card__body">${t('mobile.rotateBody')}</div>
     `;
 
+    this.syncOrientationHint(showOrientationHint);
     this.updateSprintState();
   }
 
+  private syncOrientationHint(showOrientationHint: boolean): void {
+    if (!showOrientationHint) {
+      if (this.orientationHintTimer !== null) {
+        window.clearTimeout(this.orientationHintTimer);
+        this.orientationHintTimer = null;
+      }
+      return;
+    }
+
+    if (this.orientationHintTimer !== null) {
+      return;
+    }
+
+    this.orientationHintTimer = window.setTimeout(() => {
+      this.orientationHintTimer = null;
+      this.orientationHintDismissed = true;
+      this.render();
+    }, 2600);
+  }
+
   private onViewportChange = (): void => {
+    this.render();
+  };
+
+  private onOrientationHintDismiss = (event: PointerEvent): void => {
+    event.preventDefault();
+    this.orientationHintDismissed = true;
+    if (this.orientationHintTimer !== null) {
+      window.clearTimeout(this.orientationHintTimer);
+      this.orientationHintTimer = null;
+    }
     this.render();
   };
 
